@@ -234,7 +234,7 @@ begin
 						pcm <= SPI_DOUT;
 						play_state <= 7;
 					end
-				7://Щжидаем, пока wav_clk == 1, чтобы не пойти на второй круг
+				7://Ожидаем, пока wav_clk == 1, чтобы не пойти на второй круг
 					begin
 						if(wav_clk)play_state <= 7;
 						else play_state <= 0;
