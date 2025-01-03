@@ -86,7 +86,7 @@ reg[4:0]spi_state, spi_cnt;
 reg[7:0]spi_delay;
 reg spi_sck, spi_so, spi_rdy;
 
-//Latch spi data to send
+//Защёлкиваем данные для отправки в SPI
 always@(posedge SPI_START) spidr_w <= SPI_DIN;
 
 always@(posedge clk or negedge rst)
@@ -152,12 +152,10 @@ begin
                     begin
                         if(spi_cnt == 0) spi_state <= 6;
                         else spi_state <= 2;
-                    end 
-
-                                          
+                    end                                           
                 6: //END
                     begin
-								spdr_r <= spdr_t;
+			spdr_r <= spdr_t;
                         spi_state <= 0;
                         spi_rdy <= 0;
                         spi_so <= 0;
@@ -199,55 +197,55 @@ begin
 						if(wav_clk) play_state <= 1;
 						else play_state <= 0;
 					end
-				1://Begin read cycle
+				1://Начало цикла чтения SPI (отправка команды 0x03)
 					begin
 						cs <= 1;
 						dspi <= 8'h03;
 						ret <= 2;
 						play_state <= SPI_EXCHANGE;
 					end
-				2://Send HADD
+				2://Отправка старшего байта адреса
 					begin
 						dspi <= add_cnt[23:16];
 						ret <= 3;
 						play_state <= SPI_EXCHANGE;
 					end
-				3://Send MADD
+				3://Отправка среднего байта адреса
 					begin
 						dspi <= add_cnt[15:8];
 						ret <= 4;
 						play_state <= SPI_EXCHANGE;
 					end
-				4://Send LADD
+				4://Отправка младшего байта адреса
 					begin
 						dspi <= add_cnt[7:0];
 						ret <= 5;
 						play_state <= SPI_EXCHANGE;
 					end
-				5://Send Dummy byte
+				5://Отправка байта ожидания 0xFF
 					begin
 						dspi <= 8'hFF;
 						ret <= 6;
 						play_state <= SPI_EXCHANGE;
 					end
-				6://
+				6://Деактивируем флешку
 					begin
 						cs <= 0;
 						pcm <= SPI_DOUT;
 						play_state <= 7;
 					end
-				7://While wav_clk == 1
+				7://Щжидаем, пока wav_clk == 1, чтобы не пойти на второй круг
 					begin
 						if(wav_clk)play_state <= 7;
 						else play_state <= 0;
 					end					
 ///////////////////////////////////////////////////////////////////////////////////					
-				29://SPI_EXCHANGE_ROUTINE
+				29://SPI_EXCHANGE_ROUTINE (подпрограма обмена по SPI)
 					begin
 						run_spi <= 1; //Start SPI
 						play_state <= 30;
 					end
-				30://While !SPI_BSY
+				30://Ожидаем, пока !SPI_BSY
 					begin
 						if(SPI_BSY)
 							begin
@@ -256,7 +254,7 @@ begin
 							end
 						else play_state <= 30;
 					end
-				31://While SPI_BSY
+				31://Ожидаем, пока SPI_BSY
 					begin
 						if(SPI_BSY)play_state <= 31;
 						else play_state <= ret;
